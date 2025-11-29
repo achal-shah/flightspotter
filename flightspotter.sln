@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightSpotter.Web", "FlightSpotter.Web\FlightSpotter.Web.csproj", "{FEFE25D7-06F6-4551-3FB4-A7B5ACD761CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FEFE25D7-06F6-4551-3FB4-A7B5ACD761CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEFE25D7-06F6-4551-3FB4-A7B5ACD761CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEFE25D7-06F6-4551-3FB4-A7B5ACD761CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEFE25D7-06F6-4551-3FB4-A7B5ACD761CF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EB09C8EE-DED3-4489-B86A-A1644090DC31}
+	EndGlobalSection
+EndGlobal
