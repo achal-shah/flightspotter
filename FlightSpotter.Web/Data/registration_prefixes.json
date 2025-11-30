@@ -10,5 +10,13 @@
   "ZK": { "country": "New Zealand", "code": "nz" },
   "VP": { "country": "British Overseas Territories", "code": "gb" },
   "CF": { "country": "Canada", "code": "ca" },
-  "CG": { "country": "Canada", "code": "ca" }
+  "CG": { "country": "Canada", "code": "ca" },
+  "D":  { "country": "Germany", "code": "de" },
+  "HL": { "country": "South Korea", "code": "kr" },
+  "A6": { "country": "United Arab Emirates", "code": "ae" },
+  "A7": { "country": "Qatar", "code": "qa" },
+  "9V": { "country": "Singapore", "code": "sg" },
+  "TC": { "country": "Turkey", "code": "tr" },
+  "XA": { "country": "Mexico", "code": "mx" },
+  "9H": { "country": "Malta", "code": "mt" }
 }
