@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlightSpotter.Web.Models;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace FlightSpotter.Web.Services
 {
@@ -11,8 +12,9 @@ namespace FlightSpotter.Web.Services
     {
         private readonly TableClient _flightsTableClient;
         private readonly TableClient _locationsTableClient;
+        private readonly Dictionary<string, string> _registrationMap;
 
-        public FlightTableService(IConfiguration config)
+        public FlightTableService(IConfiguration config, IHostEnvironment env)
         {
             var conn = config.GetSection("Storage").GetValue<string>("ConnectionString") ?? "UseDevelopmentStorage=true";
             var flightsTableName = config.GetSection("Storage").GetValue<string>("TableName") ?? "Flights";
@@ -21,24 +23,33 @@ namespace FlightSpotter.Web.Services
             // Create clients
             _flightsTableClient = new TableClient(conn, flightsTableName);
             _locationsTableClient = new TableClient(conn, locationsTableName);
+
+            // load registration prefix -> country map from JSON file under project/Data/
+            _registrationMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             try
             {
-                _flightsTableClient.CreateIfNotExists();
+                var jsonPath = Path.Combine(env.ContentRootPath, "Data", "registration_prefixes.json");
+                if (File.Exists(jsonPath))
+                {
+                    var json = File.ReadAllText(jsonPath);
+                    var map = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                    if (map != null)
+                    {
+                        // normalize keys (remove hyphen/space, uppercase) for easier matching
+                        foreach (var kv in map)
+                        {
+                            var key = NormalizeRegPrefix(kv.Key);
+                            if (!_registrationMap.ContainsKey(key))
+                                _registrationMap[key] = kv.Value;
+                        }
+                    }
+                }
             }
             catch
             {
-                throw;
-            }
-            try
-            {
-                _locationsTableClient.CreateIfNotExists();
-            }
-            catch
-            {
-                throw;
+                // ignore; fallback empty map
             }
         }
-
         public async Task<List<FlightEntity>> GetFlightsAsync(string sortOrder = "asc")
         {
             var results = new List<FlightEntity>();
@@ -137,11 +148,42 @@ namespace FlightSpotter.Web.Services
                     Longitude = e.GetFirstStringOrDefault("Longitude", "Lon", "Lng", "longitude")
                 };
                 if (string.IsNullOrWhiteSpace(f.Flight)) f.Flight = e.RowKey;
+                if (!string.IsNullOrWhiteSpace(f.Registration))
+                {
+                    // try to infer country from registration prefix
+                    f.Country = MapRegistrationToCountry(f.Registration);
+                }
                 results.Add(f);
             }
 
             return results;
         }
+
+        private string MapRegistrationToCountry(string? registration)
+    {
+        if (string.IsNullOrWhiteSpace(registration) || _registrationMap.Count == 0)
+            return "Unknown";
+
+        var norm = NormalizeRegistration(registration);
+
+        // try longest-prefix match (3 -> 2 -> 1)
+        var maxLen = Math.Min(3, norm.Length);
+        for (int len = maxLen; len >= 1; len--)
+        {
+            var key = norm.Substring(0, len);
+            if (_registrationMap.TryGetValue(key, out var country))
+                return country;
+        }
+
+        return "Unknown";
+    }
+
+    private static string NormalizeRegistration(string reg) =>
+        reg.ToUpperInvariant().Replace("-", "").Replace(" ", "");
+
+    private static string NormalizeRegPrefix(string prefix) =>
+        prefix.ToUpperInvariant().Replace("-", "").Replace(" ", "");
+
     }
 
     internal static class TableEntityExtensions
