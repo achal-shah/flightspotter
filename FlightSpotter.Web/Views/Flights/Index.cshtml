@@ -61,8 +61,31 @@
                 @foreach (var f in Model)
                 {
                     <tr>
-                        <td style="width:80px">@f.Country</td>
-                        <td><a href="#">@f.Flight</a></td>
+                        <td class="flag-cell">
+                            @{
+                                // Use FlagCDN for runtime flags (2-letter ISO lower-case)
+                                var cc = (f.CountryCode ?? "").ToLowerInvariant();
+                                var flagCdnTemplate = "https://flagcdn.com/w40/{0}.png";
+                            }
+
+                            @if (!string.IsNullOrEmpty(cc))
+                            {
+                                <img src="@string.Format(flagCdnTemplate, cc)"
+                                     alt="@f.Country"
+                                     title="@f.Country"
+                                     class="flag" />
+                            }
+                            else if (!string.IsNullOrEmpty(f.Country))
+                            {
+                                <span title="@f.Country">@f.Country.Substring(0, Math.Min(2, f.Country.Length))</span>
+                            }
+                        </td>
+
+                        @* Fixed column order: Flight, Time, Aircraft Code, Registration, Aircraft Type, Altitude, Heading, Latitude, Longitude *@
+                        <td style="width:80px">
+                            <a href="#">@f.Flight</a>
+                        </td>
+
                         <td>
                             @{
                                 string timeDisplay = f.Time;
@@ -93,6 +116,7 @@
                             }
                             @timeDisplay
                         </td>
+
                         <td>@f.AircraftCode</td>
                         <td>@f.Registration</td>
                         <td>@f.AircraftType</td>

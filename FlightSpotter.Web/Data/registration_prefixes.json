@@ -1,14 +1,14 @@
 {
-  "N": "United States",
-  "G": "United Kingdom",
-  "VH": "Australia",
-  "JA": "Japan",
-  "EI": "Ireland",
-  "C": "Canada",
-  "B": "China",
-  "UR": "Ukraine",
-  "ZK": "New Zealand",
-  "VP": "British Overseas Territories",
-  "CF": "Canada",
-  "CG": "Canada"
+  "N":  { "country": "United States", "code": "us" },
+  "G":  { "country": "United Kingdom", "code": "gb" },
+  "VH": { "country": "Australia", "code": "au" },
+  "JA": { "country": "Japan", "code": "jp" },
+  "EI": { "country": "Ireland", "code": "ie" },
+  "C":  { "country": "Canada", "code": "ca" },
+  "B":  { "country": "China", "code": "cn" },
+  "UR": { "country": "Ukraine", "code": "ua" },
+  "ZK": { "country": "New Zealand", "code": "nz" },
+  "VP": { "country": "British Overseas Territories", "code": "gb" },
+  "CF": { "country": "Canada", "code": "ca" },
+  "CG": { "country": "Canada", "code": "ca" }
 }

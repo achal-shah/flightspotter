@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlightSpotter.Web.Models;
 using Microsoft.Extensions.Configuration;
+using System.IO;
 using System.Text.Json;
 
 namespace FlightSpotter.Web.Services
@@ -12,7 +13,8 @@ namespace FlightSpotter.Web.Services
     {
         private readonly TableClient _flightsTableClient;
         private readonly TableClient _locationsTableClient;
-        private readonly Dictionary<string, string> _registrationMap;
+        private readonly Dictionary<string, string> _registrationCountryMap;
+        private readonly Dictionary<string, string> _registrationCodeMap;
 
         public FlightTableService(IConfiguration config, IHostEnvironment env)
         {
@@ -25,31 +27,45 @@ namespace FlightSpotter.Web.Services
             _locationsTableClient = new TableClient(conn, locationsTableName);
 
             // load registration prefix -> country map from JSON file under project/Data/
-            _registrationMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _registrationCountryMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _registrationCodeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             try
             {
                 var jsonPath = Path.Combine(env.ContentRootPath, "Data", "registration_prefixes.json");
                 if (File.Exists(jsonPath))
                 {
                     var json = File.ReadAllText(jsonPath);
-                    var map = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                    // deserialize to a dictionary of simple POCOs
+                    var map = JsonSerializer.Deserialize<Dictionary<string, RegistrationInfo>>(json);
                     if (map != null)
                     {
-                        // normalize keys (remove hyphen/space, uppercase) for easier matching
                         foreach (var kv in map)
                         {
                             var key = NormalizeRegPrefix(kv.Key);
-                            if (!_registrationMap.ContainsKey(key))
-                                _registrationMap[key] = kv.Value;
+                            if (kv.Value != null)
+                            {
+                                if (!string.IsNullOrWhiteSpace(kv.Value.country) && !_registrationCountryMap.ContainsKey(key))
+                                    _registrationCountryMap[key] = kv.Value.country;
+                                if (!string.IsNullOrWhiteSpace(kv.Value.code) && !_registrationCodeMap.ContainsKey(key))
+                                    _registrationCodeMap[key] = kv.Value.code.ToLowerInvariant();
+                            }
                         }
                     }
                 }
             }
             catch
             {
-                // ignore; fallback empty map
+                // ignore, continue with empty maps
             }
         }
+
+        private class RegistrationInfo
+        {
+            public string? country { get; set; }
+            public string? code { get; set; }
+        }
+
         public async Task<List<FlightEntity>> GetFlightsAsync(string sortOrder = "asc")
         {
             var results = new List<FlightEntity>();
@@ -148,10 +164,22 @@ namespace FlightSpotter.Web.Services
                     Longitude = e.GetFirstStringOrDefault("Longitude", "Lon", "Lng", "longitude")
                 };
                 if (string.IsNullOrWhiteSpace(f.Flight)) f.Flight = e.RowKey;
+                // try to infer country from registration prefix when country missing
+                if (string.IsNullOrWhiteSpace(f.Country) && !string.IsNullOrWhiteSpace(f.Registration))
+                {
+                    f.Country = MapRegistrationToCountry(f.Registration);
+                }
+
+                // populate CountryCode (ISO2) from registration prefix map or by matching country name
                 if (!string.IsNullOrWhiteSpace(f.Registration))
                 {
-                    // try to infer country from registration prefix
-                    f.Country = MapRegistrationToCountry(f.Registration);
+                    var code = MapRegistrationToCountryCode(f.Registration);
+                    if (!string.IsNullOrWhiteSpace(code)) f.CountryCode = code;
+                }
+                if (string.IsNullOrWhiteSpace(f.CountryCode) && !string.IsNullOrWhiteSpace(f.Country))
+                {
+                    var byName = GetCountryCodeFromName(f.Country);
+                    if (!string.IsNullOrWhiteSpace(byName)) f.CountryCode = byName;
                 }
                 results.Add(f);
             }
@@ -160,29 +188,59 @@ namespace FlightSpotter.Web.Services
         }
 
         private string MapRegistrationToCountry(string? registration)
-    {
-        if (string.IsNullOrWhiteSpace(registration) || _registrationMap.Count == 0)
-            return "Unknown";
-
-        var norm = NormalizeRegistration(registration);
-
-        // try longest-prefix match (3 -> 2 -> 1)
-        var maxLen = Math.Min(3, norm.Length);
-        for (int len = maxLen; len >= 1; len--)
         {
-            var key = norm.Substring(0, len);
-            if (_registrationMap.TryGetValue(key, out var country))
-                return country;
+            if (string.IsNullOrWhiteSpace(registration) || _registrationCountryMap.Count == 0)
+                return "Unknown";
+
+            var norm = NormalizeRegistration(registration);
+            var maxLen = Math.Min(3, norm.Length);
+            for (int len = maxLen; len >= 1; len--)
+            {
+                var key = norm.Substring(0, len);
+                if (_registrationCountryMap.TryGetValue(key, out var country))
+                    return country;
+            }
+            return "Unknown";
         }
 
-        return "Unknown";
-    }
+        private string? MapRegistrationToCountryCode(string? registration)
+        {
+            if (string.IsNullOrWhiteSpace(registration) || _registrationCodeMap.Count == 0)
+                return null;
 
-    private static string NormalizeRegistration(string reg) =>
-        reg.ToUpperInvariant().Replace("-", "").Replace(" ", "");
+            var norm = NormalizeRegistration(registration);
+            var maxLen = Math.Min(3, norm.Length);
+            for (int len = maxLen; len >= 1; len--)
+            {
+                var key = norm.Substring(0, len);
+                if (_registrationCodeMap.TryGetValue(key, out var code))
+                    return code;
+            }
+            return null;
+        }
 
-    private static string NormalizeRegPrefix(string prefix) =>
-        prefix.ToUpperInvariant().Replace("-", "").Replace(" ", "");
+        private static string NormalizeRegistration(string reg) =>
+            reg.ToUpperInvariant().Replace("-", "").Replace(" ", "");
+
+        private static string NormalizeRegPrefix(string prefix) =>
+            prefix.ToUpperInvariant().Replace("-", "").Replace(" ", "");
+
+        // Attempt to find an ISO2 country code by matching known registration mappings by country name.
+        // This searches the loaded registration maps for a matching country name and returns the associated code.
+        private string? GetCountryCodeFromName(string countryName)
+        {
+            if (string.IsNullOrWhiteSpace(countryName)) return null;
+            var target = countryName.Trim();
+            foreach (var kv in _registrationCountryMap)
+            {
+                if (string.Equals(kv.Value, target, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    // try to get code for same prefix
+                    if (_registrationCodeMap.TryGetValue(kv.Key, out var code)) return code;
+                }
+            }
+            return null;
+        }
 
     }
 
