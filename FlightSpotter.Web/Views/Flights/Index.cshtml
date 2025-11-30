@@ -3,10 +3,39 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sort = (ViewBag.Sort as string) ?? "asc";
     var next = sort == "asc" ? "desc" : "asc";
+    var tzId = ViewBag.TimeZoneId as string;
+    TimeZoneInfo? tz = null;
+    if (!string.IsNullOrEmpty(tzId))
+    {
+        try { tz = TimeZoneInfo.FindSystemTimeZoneById(tzId); } catch { tz = TimeZoneInfo.Utc; }
+    }
+}
+
+@{
+    // Determine whether to show a specific target date header.
+    DateTime? targetDate = ViewBag.TargetDate != null ? (DateTime?)ViewBag.TargetDate : null;
+    DateTime localToday;
+    if (tz != null)
+    {
+        localToday = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
+    }
+    else
+    {
+        localToday = DateTime.Today;
+    }
 }
 
 <div class="page-header">
-    <h1>Flights seen today</h1>
+    <h1>
+        @if (targetDate.HasValue && targetDate.Value.Date != localToday)
+        {
+            <text>Flights seen @targetDate.Value.ToString("yyyy-MM-dd")</text>
+        }
+        else
+        {
+            <text>Flights seen today</text>
+        }
+    </h1>
     <p><a href="#">Include domestic carriers</a></p>
 </div>
 
@@ -34,7 +63,36 @@
                     <tr>
                         <td style="width:80px">@f.Country</td>
                         <td><a href="#">@f.Flight</a></td>
-                        <td>@f.Time</td>
+                        <td>
+                            @{
+                                string timeDisplay = f.Time;
+                                var dt = f.TimeAsDateTime;
+                                if (dt.HasValue && tz != null)
+                                {
+                                    DateTime utc;
+                                    if (dt.Value.Kind == DateTimeKind.Unspecified)
+                                    {
+                                        // assume stored value is UTC if kind is unspecified
+                                        utc = DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
+                                    }
+                                    else if (dt.Value.Kind == DateTimeKind.Local)
+                                    {
+                                        utc = dt.Value.ToUniversalTime();
+                                    }
+                                    else
+                                    {
+                                        utc = dt.Value; // already UTC
+                                    }
+                                    var local = TimeZoneInfo.ConvertTimeFromUtc(utc, tz);
+                                    timeDisplay = local.ToString("HH:mm:ss");
+                                }
+                                else if (dt.HasValue)
+                                {
+                                    timeDisplay = dt.Value.ToString("HH:mm:ss");
+                                }
+                            }
+                            @timeDisplay
+                        </td>
                         <td>@f.AircraftCode</td>
                         <td>@f.Registration</td>
                         <td>@f.AircraftType</td>

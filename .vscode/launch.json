@@ -20,7 +20,7 @@
       "serverReadyAction": {
         "pattern": "Now listening on: (https?://\\S+)",
         "action": "openExternally",
-        "uriFormat": "%s"
+        "uriFormat": "%s/Flights/166244/2"
       }
     },
     {

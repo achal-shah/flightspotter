@@ -1,27 +1,41 @@
 using Azure;
 using Azure.Data.Tables;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using FlightSpotter.Web.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace FlightSpotter.Web.Services
 {
     public class FlightTableService
     {
-        private readonly TableClient _tableClient;
+        private readonly TableClient _flightsTableClient;
+        private readonly TableClient _locationsTableClient;
 
         public FlightTableService(IConfiguration config)
         {
             var conn = config.GetSection("Storage").GetValue<string>("ConnectionString") ?? "UseDevelopmentStorage=true";
-            var tableName = config.GetSection("Storage").GetValue<string>("TableName") ?? "Flights";
+            var flightsTableName = config.GetSection("Storage").GetValue<string>("TableName") ?? "Flights";
+            var locationsTableName = config.GetSection("Storage").GetValue<string>("LocationsTable") ?? "Locations";
 
-            // Create client
-            _tableClient = new TableClient(conn, tableName);
+            // Create clients
+            _flightsTableClient = new TableClient(conn, flightsTableName);
+            _locationsTableClient = new TableClient(conn, locationsTableName);
             try
             {
-                _tableClient.CreateIfNotExists();
+                _flightsTableClient.CreateIfNotExists();
             }
             catch
             {
-                // ignore creation errors for local dev if Azurite not running
+                throw;
+            }
+            try
+            {
+                _locationsTableClient.CreateIfNotExists();
+            }
+            catch
+            {
+                throw;
             }
         }
 
@@ -31,7 +45,7 @@ namespace FlightSpotter.Web.Services
 
             try
             {
-                await foreach (var e in _tableClient.QueryAsync<TableEntity>())
+                await foreach (var e in _flightsTableClient.QueryAsync<TableEntity>())
                 {
                     var f = new FlightEntity
                     {
@@ -70,7 +84,63 @@ namespace FlightSpotter.Web.Services
         // Expose raw entity retrieval from the underlying TableClient for debug endpoints
         public Task<List<Dictionary<string, object?>>> GetRawEntitiesAsync(int max = 5)
         {
-            return _tableClient.GetRawEntitiesAsync(max);
+            return _flightsTableClient.GetRawEntitiesAsync(max);
+        }
+
+        // Reads the TimeZone property from the Locations table for the given RowKey.
+        public async Task<string?> GetLocationTimeZoneAsync(string rowKey)
+        {
+            if (string.IsNullOrEmpty(rowKey))
+                return null;
+            try
+            {
+                var resp = await _locationsTableClient.GetEntityAsync<TableEntity>("Location", rowKey);
+                var entity = resp.Value;
+                if (entity != null && entity.TryGetValue("TimeZone", out var tzObj))
+                    return tzObj?.ToString();
+                return null;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Not found
+                return null;
+            }
+        }
+
+        // Queries the Flights table for all entities whose PartitionKey equals the computed partitionKey.
+        // Returns a list of FlightEntity so views can consume the expected model type.
+        public async Task<List<FlightEntity>> GetFlightsByPartitionAsync(string partitionKey)
+        {
+            var results = new List<FlightEntity>();
+            if (string.IsNullOrEmpty(partitionKey))
+                return results;
+
+            // escape single quotes in partitionKey
+            var escaped = partitionKey.Replace("'", "''");
+            var filter = $"PartitionKey eq '{escaped}'";
+
+            await foreach (var e in _flightsTableClient.QueryAsync<TableEntity>(filter))
+            {
+                var f = new FlightEntity
+                {
+                    PartitionKey = e.PartitionKey,
+                    RowKey = e.RowKey,
+                    Country = e.GetFirstStringOrDefault("Country", "OriginCountry", "origin_country"),
+                    Flight = e.GetFirstStringOrDefault("Flight", "Callsign", "CallSign", "callsign", "flight").Trim(),
+                    Time = e.GetFirstStringOrDefault("Time", "Seen", "SeenTime", "TimeUTC", "TimeUtc", "timestamp", "PositionTimestampUtc", "Timestamp"),
+                    AircraftCode = e.GetFirstStringOrDefault("AircraftCode", "Aircraft", "Icao24", "ICAO", "Icao", "Hex", "ModeS", "ModeSCode"),
+                    Registration = e.GetFirstStringOrDefault("Registration", "Reg", "registration"),
+                    AircraftType = e.GetFirstStringOrDefault("AircraftType", "Type", "aircraft_type"),
+                    Altitude = e.GetFirstStringOrDefault("Altitude", "Alt", "altitude"),
+                    Heading = e.GetFirstStringOrDefault("Heading", "Course", "heading"),
+                    Latitude = e.GetFirstStringOrDefault("Latitude", "Lat", "latitude"),
+                    Longitude = e.GetFirstStringOrDefault("Longitude", "Lon", "Lng", "longitude")
+                };
+                if (string.IsNullOrWhiteSpace(f.Flight)) f.Flight = e.RowKey;
+                results.Add(f);
+            }
+
+            return results;
         }
     }
 
