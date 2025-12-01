@@ -18,5 +18,9 @@
   "9V": { "country": "Singapore", "code": "sg" },
   "TC": { "country": "Turkey", "code": "tr" },
   "XA": { "country": "Mexico", "code": "mx" },
-  "9H": { "country": "Malta", "code": "mt" }
+  "9H": { "country": "Malta", "code": "mt" },
+  "RP": { "country": "Philippines", "code": "ph" },
+  "F":  { "country": "France", "code": "fr" },
+  "LV": { "country": "Latvia", "code": "lv" },
+  "SE": { "country": "Sweden", "code": "se" }
 }
