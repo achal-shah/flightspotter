@@ -83,7 +83,12 @@
 
                         @* Fixed column order: Flight, Time, Aircraft Code, Registration, Aircraft Type, Altitude, Heading, Latitude, Longitude *@
                         <td style="width:80px">
-                            <a href="#">@f.Flight</a>
+                            @{
+                                var flightId = (f.Flight ?? string.Empty).Trim();
+                                var encoded = System.Net.WebUtility.UrlEncode(flightId);
+                                var faUrl = $"https://flightaware.com/live/flight/{encoded}";
+                            }
+                            <a href="@faUrl" target="_blank" rel="noopener noreferrer">@f.Flight</a>
                         </td>
 
                         <td>
