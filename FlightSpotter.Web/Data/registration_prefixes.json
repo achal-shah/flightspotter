@@ -22,5 +22,8 @@
   "RP": { "country": "Philippines", "code": "ph" },
   "F":  { "country": "France", "code": "fr" },
   "LV": { "country": "Latvia", "code": "lv" },
-  "SE": { "country": "Sweden", "code": "se" }
+  "SE": { "country": "Sweden", "code": "se" },
+  "4K": { "country": "Kosovo", "code": "xk" },
+  "LX": { "country": "Luxembourg", "code": "lu" },
+  "TF": { "country": "Iceland", "code": "is" }
 }
