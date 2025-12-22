@@ -8,6 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+    <!-- Switched to OpenID Connect (OIDC) using the built-in OpenID Connect handler; no MicrosoftAccount package required -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Validators" Version="8.15.0" />
   </ItemGroup>
 
 </Project>

@@ -15,6 +15,17 @@
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
             </ul>
+            <ul class="navbar-nav ml-auto">
+                @if (User?.Identity?.IsAuthenticated ?? false)
+                {
+                    <li class="nav-item nav-link">Hello, @User.FindFirst("name")?.Value</li>
+                    <li class="nav-item"><a class="nav-link" href="/Account/Logout">Sign out</a></li>
+                }
+                else
+                {
+                    <li class="nav-item"><a class="nav-link" href="/Account/Login">Sign in</a></li>
+                }
+            </ul>
         </div>
     </nav>
 
