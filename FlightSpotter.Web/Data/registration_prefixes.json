@@ -25,5 +25,6 @@
   "SE": { "country": "Sweden", "code": "se" },
   "4K": { "country": "Kosovo", "code": "xk" },
   "LX": { "country": "Luxembourg", "code": "lu" },
-  "TF": { "country": "Iceland", "code": "is" }
+  "TF": { "country": "Iceland", "code": "is" },
+  "CC": { "country": "Chile", "code": "cc" }
 }
