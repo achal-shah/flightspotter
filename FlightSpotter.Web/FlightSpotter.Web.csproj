@@ -6,8 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <UserSecretsId>da331ced-a7b3-447c-84bf-d7896fcbbc0a</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
+    <PackageReference Include="Azure.Identity" Version="1.17.1" />
     <!-- Switched to OpenID Connect (OIDC) using the built-in OpenID Connect handler; no MicrosoftAccount package required -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Validators" Version="8.15.0" />
