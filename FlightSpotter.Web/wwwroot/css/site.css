@@ -1,0 +1,21 @@
+body { background: #fff; }
+.page-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.card-header { background: #eee; }
+.table thead th { background: #666; color: #fff; }
+
+/* Flag cell styling: centered flag on a subtle background */
+.table td.flag-cell {
+	width: 56px;
+	text-align: center;
+	vertical-align: middle;
+	background-color: #f6efe9 !important; /* subtle warm background */
+	padding: 6px 8px !important;
+}
+
+.table td.flag-cell .flag {
+	width: 26px !important;
+	height: auto !important;
+	display: inline-block !important;
+	border-radius: 2px !important;
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.05) inset !important;
+}
