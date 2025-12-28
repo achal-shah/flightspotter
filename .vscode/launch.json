@@ -2,6 +2,12 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "C#: Aircraft Data Sync Debug",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/AircraftDataSync/AircraftDataSync.csproj"
+    },
+    {
       "name": ".NET Core Launch (FlightSpotter.Web)",
       "type": "coreclr",
       "request": "launch",
