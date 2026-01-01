@@ -27,5 +27,6 @@
   "LX": { "country": "Luxembourg", "code": "lu" },
   "TF": { "country": "Iceland", "code": "is" },
   "CC": { "country": "Chile", "code": "cc" },
-  "PH": { "country": "Netherlands", "code": "ph" }
+  "PH": { "country": "Netherlands", "code": "ph" },
+  "VQ": { "country": "Bermuda", "code": "tx" }
 }
