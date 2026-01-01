@@ -33,6 +33,14 @@
       "type": "coreclr",
       "request": "attach",
       "processId": "${command:pickProcess}"
+    },
+    { 
+      "name": "Python: FlightSpotter CLI", 
+      "type": "debugpy", 
+      "request": "launch", 
+      "program": "./AirLookup/airlookup.py", 
+      "args": ["online", "78129F"],
+      "console": "integratedTerminal" 
     }
   ]
 }
