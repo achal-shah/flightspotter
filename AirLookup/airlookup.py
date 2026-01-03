@@ -48,13 +48,8 @@ def lookup(icao24: str):
 # ----------------------------------------------------------------------------
 # Retrieve an aircraft entity from Azure Table Storage
 # ----------------------------------------------------------------------------
-def get_aircraft_by_icao24(connection_string: str, icao24: str):
-    table_name = "Aircraft"
+def get_aircraft_by_icao24(table, icao24: str):
     partition_key = "Aircraft"
-
-    service = TableServiceClient.from_connection_string(conn_str=connection_string)
-    table = service.get_table_client(table_name)
-
     try:
         entity = table.get_entity(
             partition_key=partition_key,
@@ -73,23 +68,29 @@ def get_aircraft_by_icao24(connection_string: str, icao24: str):
 # ----------------------------------------------------------------------------
 # Upsert aircraft entity into Azure Table Storage
 # ----------------------------------------------------------------------------
-def upsert_aircraft(connection_string: str, icao24: str, registration: str, icao_type: str, operator: str):
-    table_name = "Aircraft"
+def upsert_aircraft(table, icao24: str, registration: str, icao_type: str, operator: str):
     partition_key = "Aircraft"
-
-    service = TableServiceClient.from_connection_string(connection_string)
-    table = service.get_table_client(table_name)
-
-    entity = {
-        "PartitionKey": partition_key,
-        "RowKey": icao24.upper(),
-        "Registration": registration,
-        "IcaoAircraftType": icao_type,
-        "IcaoOperator": operator,
-    }
+    entity = get_aircraft_by_icao24(table, icao24)
+    if entity:
+        print(f"Aircraft {icao24.upper()} already exists. It will be updated.")
+        if registration:
+            entity["Registration"] = registration
+        if icao_type:
+            entity["IcaoAircraftType"] = icao_type
+        if operator:
+            entity["IcaoOperator"] = operator
+    else:
+        entity = {
+            "PartitionKey": partition_key,
+            "RowKey": icao24.upper(),
+            "Registration": registration,
+            "IcaoAircraftType": icao_type,
+            "IcaoOperator": operator,
+        }
 
     table.upsert_entity(entity)
     print(f"Upserted aircraft {icao24.upper()} into table storage.")
+    return entity
 
 # -----------------------------
 # CLI Entry Point
@@ -110,15 +111,9 @@ def main():
     table.add_argument("icao24", help="ICAO24 hex code")
     table.add_argument("--vault", default="https://planewatch-kv.vault.azure.net/")
     table.add_argument("--secret", default="Storage--ConnectionString")
-
-    # ---- Upsert ----
-    up = sub.add_parser("upsert", help="Upsert aircraft metadata into Azure Table Storage")
-    up.add_argument("--vault", default="https://planewatch-kv.vault.azure.net/")
-    up.add_argument("--secret", default="Storage--ConnectionString")
-    up.add_argument("icao24", help="ICAO24 hex code")
-    up.add_argument("--registration", required=True)
-    up.add_argument("--type", required=True)
-    up.add_argument("--operator", required=False)
+    table.add_argument("--registration", required=False)
+    table.add_argument("--type", required=False)
+    table.add_argument("--operator", required=False)
 
     args = parser.parse_args()
 
@@ -130,14 +125,27 @@ def main():
         lookup(args.icao24)
         return
 
-    # For table + upsert, retrieve connection string from Key Vault
+    # For table, retrieve connection string from Key Vault
     secret_value = get_secret_from_keyvault(args.vault, args.secret)
     if not secret_value:
         print("Could not retrieve storage connection string from Key Vault.")
         sys.exit(1)
 
+    table_name = "Aircraft"
+    service = TableServiceClient.from_connection_string(conn_str=secret_value)
+    table_client = service.get_table_client(table_name)
+
     if args.command == "table":
-        entity = get_aircraft_by_icao24(secret_value, args.icao24)
+        if args.registration or args.type or args.operator:
+            entity = upsert_aircraft(
+                table_client,
+                icao24=args.icao24,
+                registration=args.registration,
+                icao_type=args.type,
+                operator=args.operator,
+            )
+        else:
+            entity = get_aircraft_by_icao24(table_client, args.icao24)
         if entity:
             print("Aircraft Entity:")
             for k, v in entity.items():
@@ -145,17 +153,6 @@ def main():
         else:
             print("No aircraft entity found.")
         return
-
-    if args.command == "upsert":
-        upsert_aircraft(
-            connection_string=secret_value,
-            icao24=args.icao24,
-            registration=args.registration,
-            icao_type=args.type,
-            operator=args.operator,
-        )
-        return
-
 
 if __name__ == "__main__":
     main()
