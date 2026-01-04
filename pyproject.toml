@@ -5,7 +5,6 @@ description = "FlightSpotter CLI"
 readme = "README.md"
 requires-python = ">=3.10"
 
-[project]
 dependencies = [
     "azure-identity",
     "azure-keyvault-secrets",
