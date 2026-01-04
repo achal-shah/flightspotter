@@ -1,0 +1,62 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and release the AirLookup tool.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'AirLookup/**'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-amd64
+          - os: windows-latest
+            platform: windows-amd64
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra build
+
+      - name: Build executable (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          uv run pyinstaller --onefile src/flightspotter/AirLookup/__main__.py --name airlookup
+
+      - name: Build executable (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          uv run pyinstaller --onefile src/flightspotter/AirLookup/__main__.py --name airlookup
+
+      - name: Create zip (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          zip airlookup-${{ matrix.platform }}.zip airlookup
+      
+      - name: Create zip (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd dist
+          Compress-Archive -Path airlookup.exe -DestinationPath airlookup-${{ matrix.platform }}.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: airlookup-${{ matrix.platform }}
+          path: dist/airlookup-${{ matrix.platform }}.zip
