@@ -34,6 +34,11 @@ jobs:
       - name: Install dependencies
         run: uv run pip install pyinstaller
 
+      - name: Diagnostic
+        run: |
+          pwd
+          ls _R .
+
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
