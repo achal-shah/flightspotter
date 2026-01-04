@@ -1,0 +1,13 @@
+[project]
+name = "flightspotter"
+version = "0.1.0"
+description = "FlightSpotter CLI"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "requests",
+]
+
+[project.scripts]
+airlookup = "flightspotter.AirLookup.__main__:main"
