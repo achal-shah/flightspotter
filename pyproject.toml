@@ -5,8 +5,13 @@ description = "FlightSpotter CLI"
 readme = "README.md"
 requires-python = ">=3.10"
 
+[project]
 dependencies = [
-    "requests",
+    "azure-identity",
+    "azure-keyvault-secrets",
+    "azure-data-tables",
+    "azure-core",
+    "requests",  # you already hit this issue
 ]
 
 [project.scripts]
