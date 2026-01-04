@@ -37,7 +37,7 @@ jobs:
       - name: Diagnostic
         run: |
           pwd
-          ls _R .
+          ls -R .
 
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
