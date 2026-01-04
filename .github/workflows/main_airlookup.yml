@@ -42,12 +42,12 @@ jobs:
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
-          uv run pyinstaller --onefile "${{ github.workspace }}/src/flightspotter/AirLookup/__main__.py" --name airlookup
+          uv run pyinstaller --onefile "AirLookup/__main__.py" --name airlookup
 
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
         run: |
-          uv run pyinstaller --onefile "${{ github.workspace }}/src/flightspotter/AirLookup/__main__.py" --name airlookup
+          uv run pyinstaller --onefile AirLookup/__main__.py" --name airlookup
 
       - name: Create zip (Unix)
         if: runner.os != 'Windows'
