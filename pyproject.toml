@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 dependencies = [
-    "pyinstaller>=6.3"
+    "pyinstaller>=6.3",
     "azure-identity",
     "azure-keyvault-secrets",
     "azure-data-tables",
