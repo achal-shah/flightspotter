@@ -1,0 +1,18 @@
+[project]
+name = "flightspotter"
+version = "0.1.0"
+description = "FlightSpotter CLI"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "pyinstaller>=6.3",
+    "azure-identity",
+    "azure-keyvault-secrets",
+    "azure-data-tables",
+    "azure-core",
+    "requests",  # you already hit this issue
+]
+
+[project.scripts]
+airlookup = "flightspotter.AirLookup.__main__:main"

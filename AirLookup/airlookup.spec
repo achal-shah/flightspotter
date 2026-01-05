@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['__main__.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=[
+        "azure",
+        "azure.identity",
+        "azure.keyvault",
+        "azure.keyvault.secrets",
+        "azure.data",
+        "azure.data.tables",
+        "azure.core",
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
