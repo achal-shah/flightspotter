@@ -38,6 +38,7 @@ jobs:
         run: |
           pwd
           ls -R .
+          uv run pyinstaller --version
 
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
