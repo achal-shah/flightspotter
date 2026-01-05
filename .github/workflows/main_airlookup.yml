@@ -38,7 +38,7 @@ jobs:
 
       # --- Install PyInstaller inside uv environment ---
       - name: Install PyInstaller
-        run: pip install --upgrade pyinstaller
+        run: .venv/bin/pip install --upgrade pyinstaller
 
       # --- Diagnostics to confirm correct environment ---
       - name: Diagnostic
@@ -51,10 +51,7 @@ jobs:
           uv run python -m PyInstaller --version
           echo "Which Python:"
           uv run which python
-
-      - name: Disable uv auto venv
-        run: uv venv --no-project
-        
+          
       # --- Build on Linux using the SPEC file ---
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
