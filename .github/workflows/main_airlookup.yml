@@ -1,12 +1,8 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and release the AirLookup tool.
+name: Build and release the AirLookup tool
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
       - 'AirLookup/**'
   workflow_dispatch:
@@ -24,44 +20,63 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
+      # --- CRITICAL: remove any stray virtual environments ---
+      - name: Remove stray virtual environments
+        run: |
+          rm -rf .venv || true
+          rm -rf ${{ github.workspace }}/.venv || true
+
+      # --- Install uv ---
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
+      # --- Install Python via uv ---
       - name: Set up Python
         run: uv python install 3.12
 
-      - name: Install dependencies
-        run: uv run pip install pyinstaller
+      # --- Install PyInstaller inside uv environment ---
+      - name: Install PyInstaller
+        run: uv run pip install "pyinstaller>=6.17"
 
+      # --- Diagnostics to confirm correct environment ---
       - name: Diagnostic
         run: |
+          echo "PWD:"
           pwd
-          ls -R .
-          uv run pyinstaller --version
+          echo "Python:"
+          uv run python --version
+          echo "PyInstaller:"
+          uv run python -m PyInstaller --version
+          echo "Which Python:"
+          uv run which python
 
+      # --- Build on Linux using the SPEC file ---
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
-          uv run python -m pyinstaller "AirLookup/airlookup.spec"
+          uv run python -m PyInstaller AirLookup/airlookup.spec
 
+      # --- Build on Windows (no spec file yet) ---
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
         run: |
-          uv run python -m pyinstaller --onefile "AirLookup/__main__.py" --name airlookup
+          uv run python -m PyInstaller --onefile AirLookup/__main__.py --name airlookup
 
+      # --- Package artifacts ---
       - name: Create zip (Unix)
         if: runner.os != 'Windows'
         run: |
           cd dist
           zip airlookup-${{ matrix.platform }}.zip airlookup
-      
+
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
         run: |
           cd dist
           Compress-Archive -Path airlookup.exe -DestinationPath airlookup-${{ matrix.platform }}.zip
 
+      # --- Upload artifacts ---
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
