@@ -43,12 +43,12 @@ jobs:
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
-          uv run pyinstaller "AirLookup/airlookup.spec"
+          uv run python -m pyinstaller "AirLookup/airlookup.spec"
 
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
         run: |
-          uv run pyinstaller --onefile "AirLookup/__main__.py" --name airlookup
+          uv run python -m pyinstaller --onefile "AirLookup/__main__.py" --name airlookup
 
       - name: Create zip (Unix)
         if: runner.os != 'Windows'
