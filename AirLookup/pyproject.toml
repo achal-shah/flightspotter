@@ -1,5 +1,0 @@
-[project]
-dependencies = [
-    "requests",
-    # your other deps...
-]
