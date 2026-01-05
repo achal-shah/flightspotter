@@ -38,18 +38,11 @@ jobs:
         run: |
           pwd
           ls -R .
-          uv run python - << 'EOF'
-          import pkgutil
-          print("azure:", pkgutil.find_loader("azure"))
-          print("identity:", pkgutil.find_loader("azure.identity"))
-          print("tables:", pkgutil.find_loader("azure.data.tables"))
-          print("core:", pkgutil.find_loader("azure.core"))
-          EOF
 
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
-          uv run pyinstaller --onefile "AirLookup/__main__.py" --name airlookup
+          uv run pyinstaller "AirLookup/airlookup.spec"
 
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
