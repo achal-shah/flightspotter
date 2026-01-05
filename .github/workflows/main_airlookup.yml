@@ -21,13 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # --- CRITICAL: remove any stray virtual environments ---
-      - name: Remove stray virtual environments
-        run: |
-          rm -rf .venv || true
-          rm -rf ${{ github.workspace }}/.venv || true
-          rm -rf /home/runner/work/flightspotter/flightspotter/.venv
-
       # --- Install uv ---
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -62,7 +55,7 @@ jobs:
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
         run: |
-          uv run python -m PyInstaller --onefile AirLookup/__main__.py --name airlookup
+          uv run python -m PyInstaller AirLookup/airlookup.spec
 
       # --- Package artifacts ---
       - name: Create zip (Unix)
