@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 a = Analysis(
-    ['AirLookup/__main__.py'],
+    ['__main__.py'],
     pathex=[],
     binaries=[],
     datas=[],
