@@ -38,7 +38,7 @@ jobs:
 
       # --- Install PyInstaller inside uv environment ---
       - name: Install PyInstaller
-        run: .venv/bin/pip install --upgrade pyinstaller
+        run: uv pip install --upgrade pyinstaller
 
       # --- Diagnostics to confirm correct environment ---
       - name: Diagnostic
