@@ -52,6 +52,9 @@ jobs:
           echo "Which Python:"
           uv run which python
 
+      - name: Disable uv auto venv
+        run: uv venv --no-project
+        
       # --- Build on Linux using the SPEC file ---
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
