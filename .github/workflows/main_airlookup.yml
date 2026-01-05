@@ -26,6 +26,7 @@ jobs:
         run: |
           rm -rf .venv || true
           rm -rf ${{ github.workspace }}/.venv || true
+          rm -rf /home/runner/work/flightspotter/flightspotter/.venv
 
       # --- Install uv ---
       - name: Install uv
