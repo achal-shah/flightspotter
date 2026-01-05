@@ -1,5 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_namespace
 
 a = Analysis(
     ['AirLookup/__main__.py'],
@@ -22,7 +21,6 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
-a.datas += collect_namespace('azure')
 pyz = PYZ(a.pure)
 
 exe = EXE(
