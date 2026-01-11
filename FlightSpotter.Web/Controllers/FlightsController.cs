@@ -21,10 +21,14 @@ namespace FlightSpotter.Web.Controllers
             return View(flights);
         }
 
+        /// <summary>
+        /// Return first `count` raw entities (property name -> value) for debugging
+        /// </summary>
+        /// <param name="count">Number of entities to return</param>
+        /// <returns>The entities.</returns>
         [HttpGet("/debug/entities")]
         public async Task<IActionResult> DebugEntities(int count = 5)
         {
-            // Return first `count` raw entities (property name -> value) for debugging
             try
             {
                 var raw = await _svc.GetRawEntitiesAsync(count);
